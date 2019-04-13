@@ -19,3 +19,6 @@ This plugin will help you automatically control the visitors of your site based 
 - Rapid request attack bot registration prevention.
 - Front end (js) / back end API cache
 - Language support
+
+## Library used:
+[CrawlerDetect](https://github.com/JayBizzle/Crawler-Detect) by @JayBissie

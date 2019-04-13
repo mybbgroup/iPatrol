@@ -233,6 +233,7 @@ function ipatrol_ban_proxy()
 function ipatrol_bot_trap()
 {
     global $db, $mybb, $lang, $cache;
+    $lang->load('ipatrol');
     
     if ($mybb->settings['ipatrol_detectbot'] && !$mybb->user['uid']) {
 
@@ -241,7 +242,7 @@ function ipatrol_bot_trap()
         $query = $db->simple_select("sessions", "useragent", "sid NOT LIKE'%bot%' AND UID = '0'");
         while ($skip = $db->fetch_array($query)) {
             $u_agent = trim($skip['useragent']);
-            if (!empty($u_agent) && !in_array($u_agent, $logged)) { // && preg_match($match_params, $u_agent)
+            if (!empty($u_agent) && !in_array($u_agent, $logged)) {
 
                 // Load the detector library
                 $lib_files = ['CrawlerDetect', 'AbstractProvider', 'Crawlers', 'Exclusions', 'Headers'];
@@ -257,7 +258,7 @@ function ipatrol_bot_trap()
 
                     if ($mybb->settings['ipatrol_similarbot']) {
                         $registered_spiders = $cache->read('spiders');
-                        $match_power = (int)$mybb->settings['ipatrol_simstrength'];
+                        $match_power = (int) $mybb->settings['ipatrol_simstrength'];
                         $match_power = (!$match_power || $match_power < 1) ? 40 : (($match_power > 100) ? 100 : $match_power);
 
                         foreach ($registered_spiders as $registered_spider) {
@@ -269,33 +270,36 @@ function ipatrol_bot_trap()
                     }
 
                     if (count($similar_spiders)) {
-                        print_r($similar_spiders);
                         // Send mail
-                        if($mybb->settings['ipatrol_mailalert']){
-                            $mail_matter = "A new spider visit has been detected. New spider is '".$bot_name."' having a user agent string ".$u_agent." The detected spider's name is similat to ".count($similar_spiders)." existing spider/s.";
-                            my_mail($mybb->settings['adminemail'], 'Spider detected @ '.$mybb->settings['bbname'],  $mail_matter);
+                        if ($mybb->settings['ipatrol_mailalert']) {
+                            $mail_matter = $lang->newcrawler_detected;
+                            $mail_matter .= " ".$lang->sprintf($lang->newcrawler_detail, $bot_name, $u_agent);
+                            $mail_matter .= " ".$lang->sprintf($lang->newcrawler_similar, count($similar_spiders));
+                            $mail_matter .= " ".$lang->newcrawler_notify;
+                            my_mail($mybb->settings['adminemail'], $lang->sprintf($lang->newcrawler_subject, $mybb->settings['bbname']), $mail_matter);
                         }
                         // Log here
                     } else {
-                        if($mybb->settings['ipatrol_autoaddbot']){
-                            $alert_message = "The detected spider is added to the database.";
+                        if ($mybb->settings['ipatrol_autoaddbot']) {
+                            $alert_message = $lang->newcrawler_dbadded;
                             $insert = array(
                                 'name' => $bot_name,
-                                'useragent' => strtolower($bot_name), //$u_agent,
+                                'useragent' => strtolower($mybb->settings['ipatrol_uashortbot'] ? $bot_name : $u_agent),
                                 'lastvisit' => TIME_NOW,
                             );
 
                             $db->insert_query("spiders", $insert);
                             $cache->update_spiders();
-                        } else {                            
-                            $alert_message = "This is for your information and further necessary manual action.";
+                        } else {
+                            $alert_message = $lang->newcrawler_notify;
                         }
-                        
+
                         file_put_contents('skipbot.txt', $u_agent . "\n", FILE_APPEND | LOCK_EX); // Add to CACHE INSTEAD
                         // Send mail
-                        if($mybb->settings['ipatrol_mailalert']){
-                            $mail_matter = "A new spider visit has been detected. New spider is '".$bot_name."' having a user agent string ".$u_agent." ".$alert_message;
-                            my_mail($mybb->settings['adminemail'], 'Spider detected @ '.$mybb->settings['bbname'],  $mail_matter);
+                        if ($mybb->settings['ipatrol_mailalert']) {
+                            $mail_matter = $lang->newcrawler_detected;
+                            $mail_matter .= " ".$lang->sprintf($lang->newcrawler_detail, $bot_name, $u_agent). " " . $alert_message;
+                            my_mail($mybb->settings['adminemail'], $lang->sprintf($lang->newcrawler_subject, $mybb->settings['bbname']), $mail_matter);
                         }
                         // Log here
                     }
