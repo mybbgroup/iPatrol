@@ -121,12 +121,32 @@ function ipatrol_activate()
     );
 
     $ipatrol[] = array(
+        "name" => "ipatrol_similarbot",
+        "title" => "Check Similar Named Spiders",
+        "description" => "Find for similar named spiders and if exists just notify for manual action. Setting this on will not add the spider in the database in case of a match.",
+        "optionscode" => "onoff",
+        "value" => '1',
+        "disporder" => '8',
+        "gid" => intval($gid),
+    );
+
+    $ipatrol[] = array(
+        "name" => "ipatrol_simstrength",
+        "title" => "Spider name existance match strength",
+        "description" => "The % strength of the matching. A lower value has a chance of detecting more matches but with less efficiency. 100% means will catch only exact matches. If you are unsure about it leave with default value (40%).",
+        "optionscode" => "numeric",
+        "value" => '40',
+        "disporder" => '9',
+        "gid" => intval($gid),
+    );
+
+    $ipatrol[] = array(
         "name" => "ipatrol_mailalert",
         "title" => "Send mail notification",
         "description" => "Alert sending a mail to board email whenever iPatrol commits an action.",
         "optionscode" => "yesno",
         "value" => '1',
-        "disporder" => '8',
+        "disporder" => '10',
         "gid" => intval($gid),
     );
 
@@ -150,6 +170,7 @@ function ipatrol_settingspeekers(&$peekers)
     $peekers[] = 'new Peeker($(".setting_ipatrol_banregdupe"), $("#row_setting_ipatrol_skipregdupe"),/1/,true)';
     $peekers[] = 'new Peeker($(".setting_ipatrol_detectbot"), $("#row_setting_ipatrol_autoaddbot"),/1/,true)';
     $peekers[] = 'new Peeker($(".setting_ipatrol_autoaddbot"), $("#row_setting_ipatrol_uashortbot"),/1/,true)';
+    $peekers[] = 'new Peeker($(".setting_ipatrol_similarbot"), $("#row_setting_ipatrol_simstrength"),/1/,true)';
 }
 
 function ipatrol_api_call()
@@ -212,10 +233,9 @@ function ipatrol_ban_proxy()
 function ipatrol_bot_trap()
 {
     global $db, $mybb, $lang, $cache;
-
+    
     if ($mybb->settings['ipatrol_detectbot'] && !$mybb->user['uid']) {
 
-        //$match_params = '/bot|crawl|slurp|spider|mediapartners|archiver|transcoder|uptime|validator|fetcher|cron|checker|reader|extractor|monitor|analyzer/i';
         $logged = file('skipbot.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
         $query = $db->simple_select("sessions", "useragent", "sid NOT LIKE'%bot%' AND UID = '0'");
@@ -233,18 +253,52 @@ function ipatrol_bot_trap()
 
                 if ($CrawlerDetect->isCrawler($u_agent)) {
                     $bot_name = $CrawlerDetect->getMatches();
-                    $insert = array(
-                        'name' => $bot_name,
-                        'useragent' => strtolower($bot_name), //$u_agent,
-                        'lastvisit' => TIME_NOW,
-                    );
+                    $similar_spiders = array();
 
-                    //$db->insert_query("spiders", $insert);
-                    $cache->update_spiders();
-                    file_put_contents('skipbot.txt', $u_agent . "\n", FILE_APPEND | LOCK_EX);
-                    // Send mail
-                    my_mail('me@eff.one', 'Spider added @ Demonate', $bot_name . ' / ' . $u_agent);
-                    // Log here
+                    if ($mybb->settings['ipatrol_similarbot']) {
+                        $registered_spiders = $cache->read('spiders');
+                        $match_power = (int)$mybb->settings['ipatrol_simstrength'];
+                        $match_power = (!$match_power || $match_power < 1) ? 40 : (($match_power > 100) ? 100 : $match_power);
+
+                        foreach ($registered_spiders as $registered_spider) {
+                            similar_text($bot_name, $registered_spider['name'], $match);
+                            if ($match >= $match_power) {
+                                $similar_spiders[] = $registered_spider['name'];
+                            }
+                        }
+                    }
+
+                    if (count($similar_spiders)) {
+                        print_r($similar_spiders);
+                        // Send mail
+                        if($mybb->settings['ipatrol_mailalert']){
+                            $mail_matter = "A new spider visit has been detected. New spider is '".$bot_name."' having a user agent string ".$u_agent." The detected spider's name is similat to ".count($similar_spiders)." existing spider/s.";
+                            my_mail($mybb->settings['adminemail'], 'Spider detected @ '.$mybb->settings['bbname'],  $mail_matter);
+                        }
+                        // Log here
+                    } else {
+                        if($mybb->settings['ipatrol_autoaddbot']){
+                            $alert_message = "The detected spider is added to the database.";
+                            $insert = array(
+                                'name' => $bot_name,
+                                'useragent' => strtolower($bot_name), //$u_agent,
+                                'lastvisit' => TIME_NOW,
+                            );
+
+                            $db->insert_query("spiders", $insert);
+                            $cache->update_spiders();
+                        } else {                            
+                            $alert_message = "This is for your information and further necessary manual action.";
+                        }
+                        
+                        file_put_contents('skipbot.txt', $u_agent . "\n", FILE_APPEND | LOCK_EX); // Add to CACHE INSTEAD
+                        // Send mail
+                        if($mybb->settings['ipatrol_mailalert']){
+                            $mail_matter = "A new spider visit has been detected. New spider is '".$bot_name."' having a user agent string ".$u_agent." ".$alert_message;
+                            my_mail($mybb->settings['adminemail'], 'Spider detected @ '.$mybb->settings['bbname'],  $mail_matter);
+                        }
+                        // Log here
+                    }
                 }
             }
         }

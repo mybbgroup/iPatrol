@@ -1,6 +1,8 @@
 # iPatrol
 Automate the control over the visitors of your MyBB site
 ---
+
+# NOTE: UNDER DEVELOPMENT // DO NOT USE IN LIVE SITE
 This plugin will help you automatically control the visitors of your site based on their IP address.
 
 ## Planned features so far
