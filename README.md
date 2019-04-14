@@ -21,4 +21,4 @@ This plugin will help you automatically control the visitors of your site based 
 - Language support
 
 ## Library used:
-[CrawlerDetect](https://github.com/JayBizzle/Crawler-Detect) by @JayBissie
+[CrawlerDetect](https://github.com/JayBizzle/Crawler-Detect) by @JayBizzle

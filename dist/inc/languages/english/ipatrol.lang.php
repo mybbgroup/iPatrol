@@ -1,5 +1,8 @@
 <?php
 
+$l['permission_error'] = "You are not allowed to perform this action.";
+$l['invalid_response'] = "An invalid response received from API. Please report to admin.";
+
 $l['newcrawler_detected'] = "A new spider visit has been detected.";
 $l['newcrawler_detail'] = "New spider is '{1}' having a user agent string '{2}.";
 $l['newcrawler_similar'] = "The detected spider's name is similat to {1} existing spider/s.";
