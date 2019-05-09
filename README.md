@@ -2,9 +2,6 @@
 Automate the control over the visitors of your MyBB site
 ---
 
-# NOTE: UNDER DEVELOPMENT // DO NOT USE IN LIVE SITE
-This plugin will help you automatically control the visitors of your site based on their IP address.
-
 ## Implemented Features
 - Track the location of your visitor and get various informations like: Country, City, Region, District, Timezone, Zipcode, Latitude-Longitude, Service Provider and many more.
 - Automatically block the IP addresses of the visitors using proxy.
