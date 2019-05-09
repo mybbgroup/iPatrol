@@ -219,13 +219,13 @@ if (defined('IN_ADMINCP')) {
     function ipatrol_activate()
     {
         require MYBB_ROOT . "/inc/adminfunctions_templates.php";
-        find_replace_templatesets('online_row_ip', '#{\$lookup}#', '<!-- iPatrol --><a href="#" class="iPatrol_locate" data-ip="{$user[\'ip\']}">[Locate]</a><!-- /iPatrol --> {$lookup}');
+        find_replace_templatesets('online_row_ip', '#{\$lookup}#', '<!-- iPatrol --><a href="#" class="iPatrol_locate" data-ip="{$user[\'ip\']}"></a><!-- /iPatrol -->{$lookup}');
     }
 
     function ipatrol_deactivate()
     {
         require MYBB_ROOT . "/inc/adminfunctions_templates.php";
-        find_replace_templatesets('online_row_ip', '#\<!--\siPatrol\s--\>(.+)\<!--\s/iPatrol\s--\>\s#is', '', 0);
+        find_replace_templatesets('online_row_ip', '#\<!--\siPatrol\s--\>(.+)\<!--\s\/iPatrol\s--\>#is', '', 0);
 
     }
 
@@ -261,18 +261,17 @@ if (defined('IN_ADMINCP')) {
 
     function ipatrol_fetchdetails()
     {
-        global $mybb, $lang, $templates, $theme;
-        $lang->load('ipatrol');
-        switch ($mybb->input['action']) {
-            case 'iplocate':
-                if (!verify_post_check($mybb->get_input('my_post_key'), true)) {
-                    xmlhttp_error($lang->invalid_post_code);
-                }
+        global $mybb;
+        if ($mybb->settings['ipatrol_locateuser'] && $mybb->input['action'] == 'iplocate') {
+            global $lang, $templates, $theme;
+            $lang->load('ipatrol');
+            $error_note = $locate_details = "";
 
-                if (!$mybb->usergroup['canuseipsearch']) {
-                    xmlhttp_error($lang->permission_error);
-                }
-                $locate_details = "";
+            if (!verify_post_check($mybb->get_input('my_post_key'), true)) {
+                $error_note = 'invalid_post_code';
+            } else if (!$mybb->usergroup['canuseipsearch']) {
+                $error_note = 'permission_error';
+            } else {
                 $alt = 2;
                 $api_response = json_decode(ipatrol_apicall($mybb->get_input('ip'), $mybb->get_input('fields')), true);
                 if ($api_response['status'] == 'success') {
@@ -287,21 +286,24 @@ if (defined('IN_ADMINCP')) {
                         }
                     }
                 } else {
-                    // API error phases : private range, reserved range, invalid query
                     $error_note = str_replace(' ', '_', $api_response['message']);
-                    $error_note = $lang->$error_note;
-                    $locate_details = eval($templates->render('iPatrol_locate_error_row'));
                 }
-                eval("\$locate = \"" . $templates->get("iPatrol_locate_frame") . "\";");
-                die($locate);
-                break;
+            }
+
+            if (empty($locate_details) && !empty($error_note)) {
+                $error_note = $lang->$error_note;
+                $locate_details = eval($templates->render('iPatrol_locate_error_row'));
+            }
+
+            eval("\$locate = \"" . $templates->get("iPatrol_locate_frame") . "\";");
+            die($locate);
         }
     }
 
     function ipatrol_ban_proxy()
     {
         global $mybb;
-        
+
         // IP Ban the user using Proxy
         if ($mybb->settings['ipatrol_banproxy']) {
             // Don't try to track real IP using get_ip(), we need to punish presented IP
@@ -439,7 +441,9 @@ if (defined('IN_ADMINCP')) {
     {
         global $cache;
         $prepatrol = $cache->read('ipatrol_apiresponses');
-        $cid = array_search($ip, array_column($prepatrol, 'query'));
+        if (isset($prepatrol) && is_array($prepatrol)) {
+            $cid = array_search($ip, array_column($prepatrol, 'query'));
+        }
         if ((isset($cid) && $cid === 0) || !empty($cid)) {
             $response = $prepatrol[$cid];
         } else {
@@ -528,15 +532,24 @@ if (defined('IN_ADMINCP')) {
 
     function ipatrol_jsinject()
     {
-        global $mybb, $headerinclude;
-        $headerinclude .= "
+        global $mybb;
+        if ($mybb->settings['ipatrol_locateuser']) {
+            global $lang, $headerinclude;
+            $lang->load('ipatrol');
+            $headerinclude .= "
         <script type='text/javascript'>
+        var lText = '" . $lang->locate_button . "';
         $(function(){
-            $('.iPatrol_locate').on('click', function(e){
+            $('.iPatrol_locate')
+            .each(function(){
+                $(this).text(lText);
+            })
+            .on('click', function(e){
                 e.preventDefault();
                 MyBB.popupWindow('/xmlhttp.php?action=iplocate&my_post_key='+my_post_key+'&ip='+$(this).data('ip'));
             })
         });
         </script>";
+        }
     }
 }
