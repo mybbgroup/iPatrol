@@ -22,5 +22,5 @@ This plugin will help you automatically control the visitors of your site based 
 - Front end (js) API cache
 
 ## External Dependency:
-[IP-API]() for geo-location detection
-[CrawlerDetect](https://github.com/JayBizzle/Crawler-Detect) by @JayBizzle
+- [IP-API](http://ip-api.com/) for geo-location detection
+- [CrawlerDetect](https://github.com/JayBizzle/Crawler-Detect) by @JayBizzle
