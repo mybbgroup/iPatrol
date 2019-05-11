@@ -27,7 +27,7 @@ if (defined('IN_ADMINCP')) {
             'website' => 'https://github.com/mybbgroup/iPatrol',
             'author' => 'effone</a> of <a href="https://mybb.group">MyBBGroup</a>',
             'authorsite' => 'https://eff.one',
-            'version' => '1.0.0',
+            'version' => '1.0.0-alpha',
             'compatibility' => '18*',
             'codename' => 'ipatrol',
         );
@@ -73,12 +73,10 @@ if (defined('IN_ADMINCP')) {
         $collation = $db->build_create_table_collation();
         $db->write_query("CREATE TABLE " . TABLE_PREFIX . "ipatrol_actlog (
             xid int unsigned NOT NULL auto_increment,
-            acton_name varchar(100) NOT NULL default '',
-            acton_uas varchar(300) NOT NULL default '',
-            acton_id int(10) unsigned NULL,
-            acton_on int(10) unsigned NOT NULL default 0,
-            acton_action tinyint(1) NOT NULL default 0,
-            actin_notify tinyint(1) NOT NULL default 0,
+            act_data varchar(400) NOT NULL default '',
+            act_on int(10) unsigned NOT NULL default 0,
+            act_done tinyint(1) NOT NULL default 0,
+            act_ping tinyint(1) NOT NULL default 0,
             PRIMARY KEY (xid)
         ) ENGINE=MyISAM{$collation};");
 
@@ -275,13 +273,14 @@ if (defined('IN_ADMINCP')) {
                 $alt = 2;
                 $api_response = json_decode(ipatrol_apicall($mybb->get_input('ip'), $mybb->get_input('fields')), true);
                 if ($api_response['status'] == 'success') {
-                    unset($api_response['status'], $api_response['query']);
+                    // Info to display, later drive it through setting
+                    $disp = array('as', 'isp', 'reverse', 'lat', 'lon', 'zip', 'regionName', 'city', 'country', 'timezone', 'org');
+                    
                     foreach ($api_response as $locate_item => $locate_detail) {
-                        if (!empty($locate_detail)) {
+                        if (in_array($locate_item, $disp) && !empty($locate_detail)) {
                             $alt = $alt == 1 ? 2 : 1;
                             $altbg = 'trow' . $alt;
-                            $locate_item = 'api_' . $locate_item;
-                            $locate_item = $lang->$locate_item;
+                            $locate_item = $lang->{'api_' . $locate_item};
                             $locate_details .= eval($templates->render('iPatrol_locate_valid_row'));
                         }
                     }
@@ -291,7 +290,7 @@ if (defined('IN_ADMINCP')) {
             }
 
             if (empty($locate_details) && !empty($error_note)) {
-                $error_note = $lang->$error_note;
+                $error_note = $lang->{$error_note};
                 $locate_details = eval($templates->render('iPatrol_locate_error_row'));
             }
 
@@ -313,8 +312,10 @@ if (defined('IN_ADMINCP')) {
                 $response = ipatrol_apicall($ip, 'proxy');
                 if (!empty($response) && json_decode($response, true)['proxy']) {
                     // Ban this IP
+                    $actlog['act_done'] = 8;
+                    $actlog['act_data']['ip'] = $ip;
                     ipatrol_ip_ban($ip);
-                    ipatrol_publish('ip_proxyban', ['ip' => $ip]);
+                    ipatrol_publish($actlog);
 
                     // Redirect immediately to trap the user with IP ban notice
                     header("Location: {$mybb->settings['bburl']}");
@@ -324,7 +325,7 @@ if (defined('IN_ADMINCP')) {
     }
 
     function ipatrol_bot_trap()
-    {echo preg_quote("{$user['ip']}");
+    {
         global $db, $mybb, $lang, $cache;
         $lang->load('ipatrol');
 
@@ -350,11 +351,12 @@ if (defined('IN_ADMINCP')) {
                     $CrawlerDetect = new Jaybizzle\CrawlerDetect\CrawlerDetect;
 
                     if ($CrawlerDetect->isCrawler($u_agent)) {
-                        $similar_spiders = $db_insert = array();
+                        $similar_spiders = $actlog = array();
                         $bot_name = $CrawlerDetect->getMatches();
-                        $db_insert['acton_name'] = $bot_name;
-                        $db_insert['acton_uas'] = $u_agent;
-                        $db_insert['acton_on'] = TIME_NOW;
+
+                        $actlog['act_data']['name'] = $bot_name;
+                        $actlog['act_data']['ip'] = my_strtolower(trim($_SERVER['REMOTE_ADDR']));
+                        $actlog['act_data']['uas'] = $u_agent;
 
                         if ($mybb->settings['ipatrol_similarbot']) {
                             $registered_spiders = $cache->read('spiders');
@@ -368,22 +370,12 @@ if (defined('IN_ADMINCP')) {
                                 }
                             }
                         }
-                        // ['notified', 'similar', 'added']
+
                         if (count($similar_spiders)) {
-                            $db_insert['acton_notify'] = 1;
-                            // Send mail
-                            if ($mybb->settings['ipatrol_mailalert']) {
-                                $mail_to = empty($mybb->settings['returnemail']) ? $mybb->settings['adminemail'] : $mybb->settings['returnemail'];
-                                $mail_matter = $lang->newcrawler_detected;
-                                $mail_matter .= " " . $lang->sprintf($lang->newcrawler_detail, $bot_name, $u_agent);
-                                $mail_matter .= " " . $lang->sprintf($lang->newcrawler_similar, count($similar_spiders));
-                                $mail_matter .= " " . $lang->newcrawler_notify;
-                                my_mail(trim($mail_to), $lang->sprintf($lang->newcrawler_subject, $mybb->settings['bbname']), $mail_matter);
-                            }
-                            // Log here
+                            $actlog['act_data']['match'] = $similar_spiders;
+                            $actlog['act_done'] = 1;
                         } else {
                             if ($mybb->settings['ipatrol_autoaddbot']) {
-                                $alert_message = $lang->newcrawler_autoadd;
                                 $insert = array(
                                     'name' => $bot_name,
                                     'useragent' => strtolower($mybb->settings['ipatrol_uashortbot'] ? $bot_name : $u_agent),
@@ -392,25 +384,17 @@ if (defined('IN_ADMINCP')) {
 
                                 $db->insert_query("spiders", $insert);
                                 $cache->update_spiders();
-                                $db_insert['acton_notify'] = 2;
+                                $actlog['act_done'] = 3;
                             } else {
-                                $db_insert['acton_notify'] = 0;
-                                $alert_message = $lang->newcrawler_notify;
-                            }
-
-                            //file_put_contents('skipbot.txt', $u_agent . "\n", FILE_APPEND | LOCK_EX); // Add to CACHE INSTEAD
-                            // Send mail
-                            if ($mybb->settings['ipatrol_mailalert']) {
-                                $mail_to = empty($mybb->settings['returnemail']) ? $mybb->settings['adminemail'] : $mybb->settings['returnemail'];
-                                $mail_matter = $lang->sprintf($lang->newcrawler_detected, $bot_name, $u_agent);
-                                $mail_matter .= $alert_message;
-                                my_mail(trim($mail_to), $lang->sprintf($lang->newcrawler_autoadd_subject, $mybb->settings['bbname']), $mail_matter);
+                                $actlog['act_done'] = 2;
                             }
                         }
 
                         $logged[] = $u_agent;
                         $cache->update('ipatrol_bottrap', $logged);
-                        $db->insert_query('ipatrol_actlog', $db_insert);
+
+                        // Log and notify
+                        ipatrol_publish($actlog);
                     }
                 }
             }
@@ -433,6 +417,7 @@ if (defined('IN_ADMINCP')) {
     {
         global $mybb;
         // Restrict registration of user havind an account already with same IP
+        //IPADDRESS: adminlog, adminsessions,maillogs, posts, moderatorlogs, pollvotes, privatemessages, searchlog, sessions, users
         if ($mybb->settings['ipatrol_noregdupe']) {
         }
     }
@@ -493,40 +478,85 @@ if (defined('IN_ADMINCP')) {
         return json_encode($response);
     }
 
-    // Action: [0 => 'No action, only notified', 1 => 'Added to database', 2 => 'Action from IP address blocked.', 3 => 'IP address banned.'];
-    // Notification: [0 => 'No Notification, Only Log', 1 => 'PM Notification', 2 => 'Email Notification'];
-    function ipatrol_publish($action, $data = array())
+/*
+1 : Similar spider detected
+2 : Spider detected
+3 : Spider added
+4 :
+5 :
+6 : Action blocked
+7 : Dupereg IP Banned
+8 : Proxy IP Banned
+ */
+// Notification: [0 => 'No Notification, Only Log', 1 => 'PM Notification', 2 => 'Email Notification'];
+    function ipatrol_publish($actlog = array())
     {
-        if (!empty($data)) {
-            global $mybb, $lang;
+        if (!empty($actlog) && $actlog['act_done']) {
+            global $db, $mybb, $lang;
             $lang->load('ipatrol');
+            $actlog['act_ping'] = 0;
 
-            //$mailbody = $lang->sprintf($lang->newcrawler_detected, $data['botname'], $data['botua']);
-            switch ($action) {
-                case 'newcrawler_similar':
+            // Set event
+            $event = $matter = "";
+            $act = (int) $actlog['act_done'];
+            $actlog['act_on'] = TIME_NOW;
+            switch (true) {
+                case $act <= 5:
+                    $event = 'bottrap';
+                    $matter .= $lang->sprintf($lang->{'matter_' . $event}, $actlog['act_data']['name'], $actlog['act_data']['uas']);
+                    if (!isset($actlog['act_data']['match'])) {
+                        $actlog['act_data']['match'] = array();
+                    }
+                    $matter .= $lang->sprintf($lang->{'event_' . $act}, count($actlog['act_data']['match']));
                     break;
 
-                case 'newcrawler_autoadd':
+                case $act == 6:
+                    $event = 'actblock';
                     break;
 
-                case 'newcrawler_notify':
-                    break;
-
-                case 'ip_proxyban':
-                    $mailbody = $lang->sprintf($lang->ip_proxyban_mailbody, $mybb->settings['bbname'], $data['ip']);
+                case $act > 6 && $act <= 10:
+                    $event = 'ipban';
+                    $matter .= $lang->sprintf($lang->{'event_' . $act}, $actlog['act_data']['ip']);
                     break;
             }
+            $event = $lang->{'event_' . $event};
+            $matter = $lang->sprintf($lang->matter_body, $matter);
+
+            // Notify over PM
+            //if ($mybb->settings['ipatrol_pmalert']) {
+                include_once MYBB_ROOT . 'inc/datahandlers/pm.php';
+                $pmhandler = new PMDataHandler();
+                $pmhandler->admin_override = true;
+                $pm = array(
+                    'subject' => $event,
+                    'message' => $matter,
+                    'fromid' => '1',
+                    'toid' => array('1'),
+                    'do' => '',
+                    'pmid' => '',
+                    'options' => array('signature' => '0', 'disablesmilies' => '0', 'savecopy' => '0', 'readreceipt' => '0'),
+                );
+                $pmhandler->set_data($pm);
+
+                $pmsent = array();
+                if ($pmhandler->validate_pm()) {
+                    $pmsent = $pmhandler->insert_pm();
+                }
+                if (isset($pmsent['messagesent']) && $pmsent['messagesent']) {
+                    $actlog['act_ping'] = 1;
+                }
+            //}
 
             // Send mail
             if ($mybb->settings['ipatrol_mailalert']) {
+                $actlog['act_ping'] = $actlog['act_ping'] + 2;
                 $mail_to = empty($mybb->settings['returnemail']) ? $mybb->settings['adminemail'] : $mybb->settings['returnemail'];
-                $subject = $action . '_subject';
-                my_mail(trim($mail_to), $lang->sprintf($lang->$subject, $mybb->settings['bbname']), $mailbody);
+                my_mail(trim($mail_to), $lang->sprintf($lang->event_subject, $event, $mybb->settings['bbname']), $matter);
             }
 
-            // Notify in-site
-
             // Log action
+            $actlog['act_data'] = json_encode($actlog['act_data']);
+            $db->insert_query('ipatrol_actlog', $actlog);
         }
     }
 
