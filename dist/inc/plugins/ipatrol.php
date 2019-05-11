@@ -192,12 +192,22 @@ if (defined('IN_ADMINCP')) {
         );
 
         $ipatrol[] = array(
+            "name" => "ipatrol_pmalert",
+            "title" => $lang->ipatrol_pmalert_title,
+            "description" => $lang->ipatrol_pmalert_desc,
+            "optionscode" => "yesno",
+            "value" => '1',
+            "disporder" => '11',
+            "gid" => intval($gid),
+        );
+
+        $ipatrol[] = array(
             "name" => "ipatrol_mailalert",
             "title" => $lang->ipatrol_mailalert_title,
             "description" => $lang->ipatrol_mailalert_desc,
             "optionscode" => "yesno",
             "value" => '1',
-            "disporder" => '11',
+            "disporder" => '12',
             "gid" => intval($gid),
         );
 
@@ -487,6 +497,7 @@ if (defined('IN_ADMINCP')) {
 6 : Action blocked
 7 : Dupereg IP Banned
 8 : Proxy IP Banned
+9 : Honeypot trapped IP banned
  */
 // Notification: [0 => 'No Notification, Only Log', 1 => 'PM Notification', 2 => 'Email Notification'];
     function ipatrol_publish($actlog = array())
@@ -523,7 +534,7 @@ if (defined('IN_ADMINCP')) {
             $matter = $lang->sprintf($lang->matter_body, $matter);
 
             // Notify over PM
-            //if ($mybb->settings['ipatrol_pmalert']) {
+            if ($mybb->settings['ipatrol_pmalert']) {
                 include_once MYBB_ROOT . 'inc/datahandlers/pm.php';
                 $pmhandler = new PMDataHandler();
                 $pmhandler->admin_override = true;
@@ -545,7 +556,7 @@ if (defined('IN_ADMINCP')) {
                 if (isset($pmsent['messagesent']) && $pmsent['messagesent']) {
                     $actlog['act_ping'] = 1;
                 }
-            //}
+            }
 
             // Send mail
             if ($mybb->settings['ipatrol_mailalert']) {
@@ -572,7 +583,7 @@ if (defined('IN_ADMINCP')) {
         $(function(){
             $('.iPatrol_locate')
             .each(function(){
-                $(this).text(lText);
+                $(this).html(lText);
             })
             .on('click', function(e){
                 e.preventDefault();

@@ -27,5 +27,7 @@ $l['ipatrol_similarbot_title'] = "Check Similar Named Spiders";
 $l['ipatrol_similarbot_desc'] = "Find for similar named spiders and if exists just notify for manual action. Setting this on will not add the spider to the database in case of a match.";
 $l['ipatrol_simstrength_title'] = "Spider name existance match strength";
 $l['ipatrol_simstrength_desc'] = "The % strength of the matching. A lower value has a chance of detecting more matches but with less efficiency. 100% means will catch only exact matches. If you are unsure about it leave with default value (70%).";
+$l['ipatrol_pmalert_title'] = "Send PM notification";
+$l['ipatrol_pmalert_desc'] = "Send a private message to Superadmin whenever iPatrol commits an action.";
 $l['ipatrol_mailalert_title'] = "Send mail notification";
 $l['ipatrol_mailalert_desc'] = "Alert sending a mail to board admin email whenever iPatrol commits an action.";
