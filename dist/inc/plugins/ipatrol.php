@@ -122,12 +122,22 @@ if (defined('IN_ADMINCP')) {
         );
 
         $ipatrol[] = array(
+            "name" => "ipatrol_whiteip",
+            "title" => $lang->ipatrol_whiteip_title,
+            "description" => $lang->ipatrol_whiteip_desc,
+            "optionscode" => "textarea",
+            "value" => '',
+            "disporder" => '4',
+            "gid" => intval($gid),
+        );
+
+        $ipatrol[] = array(
             "name" => "ipatrol_noregdupe",
             "title" => $lang->ipatrol_noregdupe_title,
             "description" => $lang->ipatrol_noregdupe_desc,
             "optionscode" => "onoff",
             "value" => '0',
-            "disporder" => '4',
+            "disporder" => '5',
             "gid" => intval($gid),
         );
 
@@ -137,7 +147,7 @@ if (defined('IN_ADMINCP')) {
             "description" => $lang->ipatrol_skipregdupe_desc,
             "optionscode" => "groupselect",
             "value" => '1,3,4',
-            "disporder" => '5',
+            "disporder" => '6',
             "gid" => intval($gid),
         );
 
@@ -147,7 +157,7 @@ if (defined('IN_ADMINCP')) {
             "description" => $lang->ipatrol_detectbot_desc,
             "optionscode" => "onoff",
             "value" => '1',
-            "disporder" => '6',
+            "disporder" => '7',
             "gid" => intval($gid),
         );
 
@@ -157,7 +167,7 @@ if (defined('IN_ADMINCP')) {
             "description" => $lang->ipatrol_autoaddbot_desc,
             "optionscode" => "onoff",
             "value" => '1',
-            "disporder" => '7',
+            "disporder" => '8',
             "gid" => intval($gid),
         );
 
@@ -167,7 +177,7 @@ if (defined('IN_ADMINCP')) {
             "description" => $lang->ipatrol_uashortbot_desc,
             "optionscode" => "radio\n0=" . $lang->ipatrol_uashortbot_option_1 . "\n1=" . $lang->ipatrol_uashortbot_option_2,
             "value" => '1',
-            "disporder" => '8',
+            "disporder" => '9',
             "gid" => intval($gid),
         );
 
@@ -177,7 +187,7 @@ if (defined('IN_ADMINCP')) {
             "description" => $lang->ipatrol_similarbot_desc,
             "optionscode" => "onoff",
             "value" => '1',
-            "disporder" => '9',
+            "disporder" => '10',
             "gid" => intval($gid),
         );
 
@@ -187,7 +197,7 @@ if (defined('IN_ADMINCP')) {
             "description" => $lang->ipatrol_simstrength_desc,
             "optionscode" => "numeric",
             "value" => '70',
-            "disporder" => '10',
+            "disporder" => '11',
             "gid" => intval($gid),
         );
 
@@ -197,7 +207,7 @@ if (defined('IN_ADMINCP')) {
             "description" => $lang->ipatrol_pmalert_desc,
             "optionscode" => "yesno",
             "value" => '1',
-            "disporder" => '11',
+            "disporder" => '12',
             "gid" => intval($gid),
         );
 
@@ -207,7 +217,7 @@ if (defined('IN_ADMINCP')) {
             "description" => $lang->ipatrol_mailalert_desc,
             "optionscode" => "yesno",
             "value" => '1',
-            "disporder" => '12',
+            "disporder" => '13',
             "gid" => intval($gid),
         );
 
@@ -314,11 +324,12 @@ if (defined('IN_ADMINCP')) {
         global $mybb;
 
         // IP Ban the user using Proxy
-        if ($mybb->settings['ipatrol_banproxy']) {
+        if ($mybb->settings['ipatrol_banproxy']) {            
             // Don't try to track real IP using get_ip(), we need to punish presented IP
             $ip = my_strtolower(trim($_SERVER['REMOTE_ADDR']));
+            $whitelist = array_map('trim', preg_split('/\r\n|\r|\n/', $mybb->settings['ipatrol_whiteip']));
 
-            if (!is_banned_ip($ip)) { // Also check with some whitelist for already passed IPs
+            if (!is_banned_ip($ip) && !in_array($ip, $whitelist)) {
                 $response = ipatrol_apicall($ip, 'proxy');
                 if (!empty($response) && json_decode($response, true)['proxy']) {
                     // Ban this IP
@@ -387,8 +398,8 @@ if (defined('IN_ADMINCP')) {
                         } else {
                             if ($mybb->settings['ipatrol_autoaddbot']) {
                                 $insert = array(
-                                    'name' => $bot_name,
-                                    'useragent' => strtolower($mybb->settings['ipatrol_uashortbot'] ? $bot_name : $u_agent),
+                                    'name' => ($db->escape_string($bot_name)),
+                                    'useragent' => ($db->escape_string(strtolower($mybb->settings['ipatrol_uashortbot'] ? $bot_name : $u_agent))),
                                     'lastvisit' => TIME_NOW,
                                 );
 
