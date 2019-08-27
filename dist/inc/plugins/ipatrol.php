@@ -277,6 +277,12 @@ if (defined('IN_ADMINCP')) {
     $plugins->add_hook('global_end', 'ipatrol_ban_proxy');
     $plugins->add_hook('member_do_register_start', 'ipatrol_ban_regdupe');
 
+    // Hooks for auto-unapproval of post
+    $plugins->add_hook('datahandler_post_validate_post', 'ipatrol_spamcheck');
+    $plugins->add_hook('datahandler_post_validate_thread', 'ipatrol_spamcheck');
+    $plugins->add_hook('datahandler_post_update_thread', 'ipatrol_spamcheck');
+    $plugins->add_hook('datahandler_post_update', 'ipatrol_spamcheck');
+
     function ipatrol_fetchdetails()
     {
         global $mybb;
@@ -603,5 +609,67 @@ if (defined('IN_ADMINCP')) {
         });
         </script>";
         }
+    }
+
+    function ipatrol_spamcheck(&$post)
+    {
+        global $mybb;
+        if (!$mybb->user['moderateposts']
+            && !in_array($mybb->user['uid'], explode(',', $mybb->settings['ipatrol_postcheckwlist']))
+            && $mybb->settings['ipatrol_postcheck']
+            && (int) $mybb->user['postnum'] < (int) $mybb->settings['ipatrol_postchecknum']) {
+            $suspectedgroups = array_filter(array_unique(explode(',', $mybb->settings['ipatrol_postcheckgids'])));
+            $usergroups = array_filter(array_unique(explode(',', $mybb->user['usergroup'] . ',' . $mybb->user['additionalgroups'])));
+
+            if (!empty($suspectedgroups)
+                && !empty(array_intersect($usergroups, $suspectedgroups))
+                && ipatrol_scanpost($post->data['message'])) {
+                if ($post->method == "update") {
+                    if ($mybb->settings['ipatrol_postcheckedit']) {
+                        if ($post->first_post) {
+                            $post->thread_update_data['visible'] = 0;
+                        }
+                        $post->post_update_data['visible'] = 0;
+                    }
+                } else {
+                    // No hook in required place; let's fool MyBB
+                    $mybb->user['moderateposts'] = 1;
+
+                    // Temporarily modify notice string
+                    global $lang;
+                    $lang->load('ipatrol');
+                    $lang->redirect_newreply_moderation = $lang->spampost_caught;
+                    $lang->redirect_newthread_moderation = $lang->spamthread_caught;
+                }
+            }
+        }
+    }
+
+    function ipatrol_scanpost($post)
+    {
+        global $mybb;
+
+        // Check for restricted words
+        $catch_str = explode(',', $mybb->settings['ipatrol_postcheckstring']);
+        if (!empty($catch_str)) {
+            foreach ($catch_str as $str) {
+                if (stripos($post, trim($str)) !== false) {
+                    return true;
+                }
+            }
+        }
+
+        // Check for foreign url
+        $in_house = parse_url(strtolower($mybb->settings['bburl']));
+        preg_match_all('#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $post, $match);
+        if (!empty($match[0])) {
+            foreach ($match[0] as $url) {
+                $url = parse_url(strtolower($url));
+                if ($url['host'] !== $in_house['host']) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

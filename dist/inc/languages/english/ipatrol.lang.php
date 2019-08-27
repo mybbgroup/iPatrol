@@ -9,6 +9,8 @@ $l['invalid_response'] = "An invalid response received from API. Please report t
 $l['private_range'] = "The IP address is considered falling under private range and blocked by IANA from public usage.";
 $l['reserved_range'] = "The IP address is considered falling under reserved range.";
 $l['invalid_query'] = "The IP address / query made to API is invalid.";
+$l['spampost_caught'] = "Your post appears to be suspicious and requires a moderator approval to be visible.";
+$l['spamthread_caught'] = "<br><b>However; your thread appears to be suspicious; kept under moderation and will only be visible after a moderator approves it.</b>";
 
 $l['api_as'] = "Autonomous System:";
 $l['api_isp'] = "Service Provider:";
