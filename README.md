@@ -5,6 +5,10 @@
 ## Implemented Features
 - Track the location of your visitor and get various informations like: Country, City, Region, District, Timezone, Zipcode, Latitude-Longitude, Service Provider and many more.
 - Automatically block the IP addresses of the visitors using proxy.
+- Whitelist IP addresses to skip being banned.
+- Automatically unapprove threads / posts for users under certain groups having lower than defined post count and tries to spam (using defined string or foreign url link).
+- Automatically unapprove threads / posts like above, but if user tries to spam by late editing post bypassing above.
+- Whitelist user IDs whose threads / posts will not be unapproved by the above process.
 - Detect spiders visiting your site which are not already registered and showing as guests.
 - Automatically add detected spiders to database so that they can show up in Who's online list as spiders with their name.
 - Get notified about the detected spiders with a different User Agent string for further manual actions.
@@ -15,7 +19,6 @@
 - Restrict / IP ban duplicate registration attempts.
 - Restrict access for the visitors based on various geolocation conditions.
 - Ability to see all actions performed by iPatrol right inside Moderator Control Panel.
-- Automatically put the user account under moderation if new user (decided by making x legit posts) is posting a link. The moderation gets removed automatically after posting mentioned number of visible clean posts.
 
 ## External Dependency:
 - [IP-API](http://ip-api.com/) for geo-location detection

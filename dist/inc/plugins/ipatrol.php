@@ -1,12 +1,11 @@
 <?php
 /**
  * @package iPatrol
- * @version 1.0.0
+ * @version 1.1.0
  * @category MyBB 1.8.x Plugin
  * @author effone <effone@mybb.com>
  * @license MIT
  *
- * @todo ACP Settings
  */
 
 if (!defined('IN_MYBB')) {
@@ -90,138 +89,122 @@ if (defined('IN_ADMINCP')) {
         );
         $db->insert_query("settinggroups", $ipatrol_group);
         $gid = $db->insert_id();
+        $disporder = 0;
 
         $ipatrol[] = array(
             "name" => "ipatrol_locateuser",
-            "title" => $lang->ipatrol_locateuser_title,
-            "description" => $lang->ipatrol_locateuser_desc,
             "optionscode" => "onoff",
             "value" => '1',
-            "disporder" => '1',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_apicachelimit",
-            "title" => $lang->ipatrol_apicachelimit_title,
-            "description" => $lang->ipatrol_apicachelimit_desc,
             "optionscode" => "numeric",
             "value" => '100',
-            "disporder" => '2',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_banproxy",
-            "title" => $lang->ipatrol_banproxy_title,
-            "description" => $lang->ipatrol_banproxy_desc,
             "optionscode" => "onoff",
             "value" => '1',
-            "disporder" => '3',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_whiteip",
-            "title" => $lang->ipatrol_whiteip_title,
-            "description" => $lang->ipatrol_whiteip_desc,
             "optionscode" => "textarea",
             "value" => '',
-            "disporder" => '4',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
+            "name" => "ipatrol_postcheck",
+            "optionscode" => "onoff",
+            "value" => '1',
+        );
+
+        $ipatrol[] = array(
+            "name" => "ipatrol_postcheckedit",
+            "optionscode" => "onoff",
+            "value" => '1',
+        );
+
+        $ipatrol[] = array(
+            "name" => "ipatrol_postchecknum",
+            "optionscode" => "numeric",
+            "value" => '5',
+        );
+
+        $ipatrol[] = array(
+            "name" => "ipatrol_postcheckgids",
+            "optionscode" => "text",
+            "value" => '1,2,5,7',
+        );
+
+        $ipatrol[] = array(
+            "name" => "ipatrol_postcheckwlist",
+            "optionscode" => "text",
+            "value" => '',
+        );
+/*
+        $ipatrol[] = array(
             "name" => "ipatrol_noregdupe",
-            "title" => $lang->ipatrol_noregdupe_title,
-            "description" => $lang->ipatrol_noregdupe_desc,
             "optionscode" => "onoff",
             "value" => '0',
-            "disporder" => '5',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_skipregdupe",
-            "title" => $lang->ipatrol_skipregdupe_title,
-            "description" => $lang->ipatrol_skipregdupe_desc,
             "optionscode" => "groupselect",
             "value" => '1,3,4',
-            "disporder" => '6',
-            "gid" => intval($gid),
         );
-
+*/
         $ipatrol[] = array(
             "name" => "ipatrol_detectbot",
-            "title" => $lang->ipatrol_detectbot_title,
-            "description" => $lang->ipatrol_detectbot_desc,
             "optionscode" => "onoff",
             "value" => '1',
-            "disporder" => '7',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_autoaddbot",
-            "title" => $lang->ipatrol_autoaddbot_title,
-            "description" => $lang->ipatrol_autoaddbot_desc,
             "optionscode" => "onoff",
             "value" => '1',
-            "disporder" => '8',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_uashortbot",
-            "title" => $lang->ipatrol_uashortbot_title,
-            "description" => $lang->ipatrol_uashortbot_desc,
             "optionscode" => "radio\n0=" . $lang->ipatrol_uashortbot_option_1 . "\n1=" . $lang->ipatrol_uashortbot_option_2,
             "value" => '1',
-            "disporder" => '9',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_similarbot",
-            "title" => $lang->ipatrol_similarbot_title,
-            "description" => $lang->ipatrol_similarbot_desc,
             "optionscode" => "onoff",
             "value" => '1',
-            "disporder" => '10',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_simstrength",
-            "title" => $lang->ipatrol_simstrength_title,
-            "description" => $lang->ipatrol_simstrength_desc,
             "optionscode" => "numeric",
             "value" => '70',
-            "disporder" => '11',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_pmalert",
-            "title" => $lang->ipatrol_pmalert_title,
-            "description" => $lang->ipatrol_pmalert_desc,
             "optionscode" => "yesno",
             "value" => '1',
-            "disporder" => '12',
-            "gid" => intval($gid),
         );
 
         $ipatrol[] = array(
             "name" => "ipatrol_mailalert",
-            "title" => $lang->ipatrol_mailalert_title,
-            "description" => $lang->ipatrol_mailalert_desc,
             "optionscode" => "yesno",
             "value" => '1',
-            "disporder" => '13',
-            "gid" => intval($gid),
         );
 
         foreach ($ipatrol as $ipatrol_opt) {
+            $ipatrol_opt['title'] = $lang->{$ipatrol_opt['name'] . "_title"};
+            $ipatrol_opt['description'] = $lang->{$ipatrol_opt['name'] . "_desc"};
+            $ipatrol_opt['disporder'] = ++$disporder;
+            $ipatrol_opt['gid'] = intval($gid);
+
             $db->insert_query("settings", $ipatrol_opt);
         }
 
@@ -254,7 +237,7 @@ if (defined('IN_ADMINCP')) {
         $db->delete_query('templategroups', "prefix='iPatrol'");
         $db->delete_query('templates', "title LIKE 'iPatrol_%'");
 
-        $db->drop_table('ipatrol_actlog');
+        // $db->drop_table('ipatrol_actlog');
         $cache->delete('ipatrol_apiresponses');
         $cache->delete('ipatrol_bottrap');
         $db->delete_query("settings", "name LIKE '%ipatrol%'");
@@ -265,14 +248,20 @@ if (defined('IN_ADMINCP')) {
 
     function ipatrol_settingspeekers(&$peekers)
     {
-        $peekers[] = 'new Peeker($(".setting_ipatrol_noregdupe"), $("#row_setting_ipatrol_skipregdupe"),/1/,true)';
+        //$peekers[] = 'new Peeker($(".setting_ipatrol_noregdupe"), $("#row_setting_ipatrol_skipregdupe"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_detectbot"), $("#row_setting_ipatrol_autoaddbot"),/1/,true)';
+        $peekers[] = 'new Peeker($(".setting_ipatrol_detectbot"), $("#row_setting_ipatrol_similarbot"),/1/,true)';
+        $peekers[] = 'new Peeker($(".setting_ipatrol_banproxy"), $("#row_setting_ipatrol_whiteip"),/1/,true)';
+        $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckedit"),/1/,true)';
+        $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postchecknum"),/1/,true)';
+        $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckgids"),/1/,true)';
+        $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckwlist"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_autoaddbot"), $("#row_setting_ipatrol_uashortbot"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_similarbot"), $("#row_setting_ipatrol_simstrength"),/1/,true)';
     }
 } else {
-    $plugins->add_hook('xmlhttp', 'ipatrol_fetchdetails');
-    $plugins->add_hook('online_start', 'ipatrol_jsinject');
+    $plugins->add_hook('xmlhttp', 'ipatrol_fetch_details');
+    $plugins->add_hook('online_start', 'ipatrol_js_inject');
     $plugins->add_hook('global_start', 'ipatrol_bot_trap');
     $plugins->add_hook('global_end', 'ipatrol_ban_proxy');
     $plugins->add_hook('member_do_register_start', 'ipatrol_ban_regdupe');
@@ -283,7 +272,7 @@ if (defined('IN_ADMINCP')) {
     $plugins->add_hook('datahandler_post_update_thread', 'ipatrol_spamcheck');
     $plugins->add_hook('datahandler_post_update', 'ipatrol_spamcheck');
 
-    function ipatrol_fetchdetails()
+    function ipatrol_fetch_details()
     {
         global $mybb;
         if ($mybb->settings['ipatrol_locateuser'] && $mybb->input['action'] == 'iplocate') {
@@ -297,7 +286,7 @@ if (defined('IN_ADMINCP')) {
                 $error_note = 'permission_error';
             } else {
                 $alt = 2;
-                $api_response = json_decode(ipatrol_apicall($mybb->get_input('ip'), $mybb->get_input('fields')), true);
+                $api_response = json_decode(ipatrol_ip_info($mybb->get_input('ip'), $mybb->get_input('fields')), true);
                 if ($api_response['status'] == 'success') {
                     // Info to display, later drive it through setting
                     $disp = array('as', 'isp', 'reverse', 'lat', 'lon', 'zip', 'regionName', 'city', 'country', 'timezone', 'org');
@@ -336,7 +325,7 @@ if (defined('IN_ADMINCP')) {
             $whitelist = array_map('trim', preg_split('/\r\n|\r|\n/', $mybb->settings['ipatrol_whiteip']));
 
             if (!is_banned_ip($ip) && !in_array($ip, $whitelist)) {
-                $response = ipatrol_apicall($ip, 'proxy');
+                $response = ipatrol_ip_info($ip, 'proxy');
                 if (!empty($response) && json_decode($response, true)['proxy']) {
                     // Ban this IP
                     $actlog['act_done'] = 8;
@@ -440,16 +429,25 @@ if (defined('IN_ADMINCP')) {
         $cache->update_bannedips();
     }
 
-    function ipatrol_ban_regdupe()
+    function ipatrol_api_call($url)
     {
-        global $mybb;
-        // Restrict registration of user havind an account already with same IP
-        //IPADDRESS: adminlog, adminsessions,maillogs, posts, moderatorlogs, pollvotes, privatemessages, searchlog, sessions, users
-        if ($mybb->settings['ipatrol_noregdupe']) {
+        $stream = stream_context_create(array(
+            'http' => array(
+                'timeout' => 3, // Timeout in seconds
+            ),
+        ));
+
+        $response = @file_get_contents($url, 0, $stream);
+        $response = json_decode($response, true);
+        if (!json_last_error() == 0) {
+            // Return response failed / not in expected JSON format
+            return false;
+        } else {
+            return $response;
         }
     }
 
-    function ipatrol_apicall($ip, $fields = '')
+    function ipatrol_ip_info($ip, $fields = '')
     {
         global $cache;
         $prepatrol = $cache->read('ipatrol_apiresponses');
@@ -459,16 +457,9 @@ if (defined('IN_ADMINCP')) {
         if ((isset($cid) && $cid === 0) || !empty($cid)) {
             $response = $prepatrol[$cid];
         } else {
-            $stream = stream_context_create(array(
-                'http' => array(
-                    'timeout' => 3, // Timeout in seconds
-                ),
-            ));
+            $response = ipatrol_api_call("http://ip-api.com/json/" . $ip . "?fields=786431"); // Fetch all data for reference
 
-            $response = @file_get_contents("http://ip-api.com/json/" . $ip . "?fields=786431", 0, $stream); // Fetch all data for reference
-            $response = json_decode($response, true);
-            if (!json_last_error() == 0) {
-                // Return response failed / not in expected JSON format
+            if (!$response) {
                 global $lang;
                 $lang->load('ipatrol');
                 $response = array('error' => $lang->invalid_response);
@@ -588,7 +579,7 @@ if (defined('IN_ADMINCP')) {
         }
     }
 
-    function ipatrol_jsinject()
+    function ipatrol_js_inject()
     {
         global $mybb;
         if ($mybb->settings['ipatrol_locateuser']) {
