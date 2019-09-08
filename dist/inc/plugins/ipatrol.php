@@ -70,7 +70,7 @@ if (defined('IN_ADMINCP')) {
 
         // Create our table collation
         $collation = $db->build_create_table_collation();
-        $db->write_query("CREATE TABLE " . TABLE_PREFIX . "ipatrol_actlog (
+        $db->write_query("CREATE TABLE IF NOT EXISTS " . TABLE_PREFIX . "ipatrol_actlog (
             xid int unsigned NOT NULL auto_increment,
             act_data varchar(400) NOT NULL default '',
             act_on int(10) unsigned NOT NULL default 0,
@@ -125,6 +125,12 @@ if (defined('IN_ADMINCP')) {
             "name" => "ipatrol_postcheckedit",
             "optionscode" => "onoff",
             "value" => '1',
+        );
+
+        $ipatrol[] = array(
+            "name" => "ipatrol_postcheckword",
+            "optionscode" => "text",
+            "value" => 'Credit Card, Porn',
         );
 
         $ipatrol[] = array(
@@ -214,7 +220,10 @@ if (defined('IN_ADMINCP')) {
     function ipatrol_is_installed()
     {
         global $db;
-        return $db->table_exists('ipatrol_actlog');
+        $query = $db->simple_select("settinggroups", "gid", "name='ipatrol'");
+        $gid = $db->fetch_field($query, "gid");
+    
+        return !empty($gid);
     }
 
     function ipatrol_activate()
@@ -253,6 +262,7 @@ if (defined('IN_ADMINCP')) {
         $peekers[] = 'new Peeker($(".setting_ipatrol_detectbot"), $("#row_setting_ipatrol_similarbot"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_banproxy"), $("#row_setting_ipatrol_whiteip"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckedit"),/1/,true)';
+        $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckword"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postchecknum"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckgids"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckwlist"),/1/,true)';
@@ -641,7 +651,7 @@ if (defined('IN_ADMINCP')) {
         global $mybb;
 
         // Check for restricted words
-        $catch_str = explode(',', $mybb->settings['ipatrol_postcheckstring']);
+        $catch_str = explode(',', $mybb->settings['ipatrol_postcheckword']);
         if (!empty($catch_str)) {
             foreach ($catch_str as $str) {
                 if (stripos($post, trim($str)) !== false) {
