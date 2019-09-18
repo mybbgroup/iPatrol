@@ -26,7 +26,7 @@ if (defined('IN_ADMINCP')) {
             'website' => 'https://github.com/mybbgroup/iPatrol',
             'author' => 'effone</a> of <a href="https://mybb.group">MyBBGroup</a>',
             'authorsite' => 'https://eff.one',
-            'version' => '1.0.0-alpha',
+            'version' => '1.1.0',
             'compatibility' => '18*',
             'codename' => 'ipatrol',
         );
@@ -116,6 +116,12 @@ if (defined('IN_ADMINCP')) {
         );
 
         $ipatrol[] = array(
+            "name" => "ipatrol_whitegids",
+            "optionscode" => "groupselect",
+            "value" => '3,4,6',
+        );
+
+        $ipatrol[] = array(
             "name" => "ipatrol_whiteip",
             "optionscode" => "textarea",
             "value" => '',
@@ -147,7 +153,7 @@ if (defined('IN_ADMINCP')) {
 
         $ipatrol[] = array(
             "name" => "ipatrol_postcheckgids",
-            "optionscode" => "text",
+            "optionscode" => "groupselect",
             "value" => '1,2,5,7',
         );
 
@@ -266,6 +272,7 @@ if (defined('IN_ADMINCP')) {
         //$peekers[] = 'new Peeker($(".setting_ipatrol_noregdupe"), $("#row_setting_ipatrol_skipregdupe"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_detectbot"), $("#row_setting_ipatrol_autoaddbot"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_detectbot"), $("#row_setting_ipatrol_similarbot"),/1/,true)';
+        $peekers[] = 'new Peeker($(".setting_ipatrol_banproxy"), $("#row_setting_ipatrol_whitegids"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_banproxy"), $("#row_setting_ipatrol_whiteip"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckedit"),/1/,true)';
         $peekers[] = 'new Peeker($(".setting_ipatrol_postcheck"), $("#row_setting_ipatrol_postcheckword"),/1/,true)';
@@ -337,12 +344,16 @@ if (defined('IN_ADMINCP')) {
         global $mybb;
 
         // IP Ban the user using Proxy
-        if ($mybb->settings['ipatrol_banproxy']) {            
+        if ($mybb->settings['ipatrol_banproxy']) {
             // Don't try to track real IP using get_ip(), we need to punish presented IP
             $ip = my_strtolower(trim($_SERVER['REMOTE_ADDR']));
             $whitelist = array_map('trim', preg_split('/\r\n|\r|\n/', $mybb->settings['ipatrol_whiteip']));
+            $whitegroups = array_filter(array_unique(explode(',', $mybb->settings['ipatrol_whitegids'])));
+            $usergroups = array_filter(array_unique(explode(',', $mybb->user['usergroup'] . ',-1,' . $mybb->user['additionalgroups'])));
 
-            if (!is_banned_ip($ip) && !in_array($ip, $whitelist)) {
+            if (!is_banned_ip($ip) 
+                && empty(array_intersect($usergroups, $whitegroups))
+                && !in_array($ip, $whitelist)) {
                 $response = ipatrol_ip_info($ip, 'proxy');
                 if (!empty($response) && json_decode($response, true)['proxy']) {
                     // Ban this IP
@@ -628,7 +639,7 @@ if (defined('IN_ADMINCP')) {
             && $mybb->settings['ipatrol_postcheck']
             && (int) $mybb->user['postnum'] < (int) $mybb->settings['ipatrol_postchecknum']) {
             $suspectedgroups = array_filter(array_unique(explode(',', $mybb->settings['ipatrol_postcheckgids'])));
-            $usergroups = array_filter(array_unique(explode(',', $mybb->user['usergroup'] . ',' . $mybb->user['additionalgroups'])));
+            $usergroups = array_filter(array_unique(explode(',', $mybb->user['usergroup'] . ',-1,' . $mybb->user['additionalgroups'])));
 
             if (!empty($suspectedgroups)
                 && !empty(array_intersect($usergroups, $suspectedgroups))
