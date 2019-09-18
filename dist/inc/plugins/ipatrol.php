@@ -26,7 +26,7 @@ if (defined('IN_ADMINCP')) {
             'website' => 'https://github.com/mybbgroup/iPatrol',
             'author' => 'effone</a> of <a href="https://mybb.group">MyBBGroup</a>',
             'authorsite' => 'https://eff.one',
-            'version' => '1.0.0-alpha',
+            'version' => '1.1.0',
             'compatibility' => '18*',
             'codename' => 'ipatrol',
         );
@@ -111,7 +111,7 @@ if (defined('IN_ADMINCP')) {
 
         $ipatrol[] = array(
             "name" => "ipatrol_whitegids",
-            "optionscode" => "text",
+            "optionscode" => "groupselect",
             "value" => '3,4,6',
         );
 
@@ -147,7 +147,7 @@ if (defined('IN_ADMINCP')) {
 
         $ipatrol[] = array(
             "name" => "ipatrol_postcheckgids",
-            "optionscode" => "text",
+            "optionscode" => "groupselect",
             "value" => '1,2,5,7',
         );
 
@@ -341,7 +341,7 @@ if (defined('IN_ADMINCP')) {
             $ip = my_strtolower(trim($_SERVER['REMOTE_ADDR']));
             $whitelist = array_map('trim', preg_split('/\r\n|\r|\n/', $mybb->settings['ipatrol_whiteip']));
             $whitegroups = array_filter(array_unique(explode(',', $mybb->settings['ipatrol_whitegids'])));
-            $usergroups = array_filter(array_unique(explode(',', $mybb->user['usergroup'] . ',' . $mybb->user['additionalgroups'])));
+            $usergroups = array_filter(array_unique(explode(',', $mybb->user['usergroup'] . ',-1,' . $mybb->user['additionalgroups'])));
 
             if (!is_banned_ip($ip) 
                 && empty(array_intersect($usergroups, $whitegroups))
@@ -631,7 +631,7 @@ if (defined('IN_ADMINCP')) {
             && $mybb->settings['ipatrol_postcheck']
             && (int) $mybb->user['postnum'] < (int) $mybb->settings['ipatrol_postchecknum']) {
             $suspectedgroups = array_filter(array_unique(explode(',', $mybb->settings['ipatrol_postcheckgids'])));
-            $usergroups = array_filter(array_unique(explode(',', $mybb->user['usergroup'] . ',' . $mybb->user['additionalgroups'])));
+            $usergroups = array_filter(array_unique(explode(',', $mybb->user['usergroup'] . ',-1,' . $mybb->user['additionalgroups'])));
 
             if (!empty($suspectedgroups)
                 && !empty(array_intersect($usergroups, $suspectedgroups))
