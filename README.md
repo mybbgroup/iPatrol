@@ -4,6 +4,7 @@
 
 ## Implemented Features
 - Track the location of your visitor and get various informations like: Country, City, Region, District, Timezone, Zipcode, Latitude-Longitude, Service Provider and many more.
+- Identify and restrict usage of disposable email ids during user registration.
 - Automatically block the IP addresses of the visitors using proxy.
 - Whitelist IP addresses to skip being banned.
 - Automatically unapprove threads / posts for users under certain groups having lower than defined post count and tries to spam (using defined string or foreign url link).
@@ -22,4 +23,5 @@
 
 ## External Dependency:
 - [IP-API](http://ip-api.com/) for geo-location detection
+- [Kickbox](https://open.kickbox.com/) for disposable email detection
 - [CrawlerDetect](https://github.com/JayBizzle/Crawler-Detect) by @JayBizzle
