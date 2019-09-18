@@ -4,6 +4,7 @@ $l['locate_title'] = "Location Details";
 $l['locate_item'] = "Field";
 $l['locate_detail'] = "Value";
 $l['locate_button'] = "[Locate]";
+$l['userdata_disposable_email'] = "Disposable email is restricted.";
 $l['permission_error'] = "You are not allowed to perform this action.";
 $l['invalid_response'] = "An invalid response received from API. Please report to admin.";
 $l['private_range'] = "The IP address is considered falling under private range and blocked by IANA from public usage.";

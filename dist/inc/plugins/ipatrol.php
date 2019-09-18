@@ -104,6 +104,12 @@ if (defined('IN_ADMINCP')) {
         );
 
         $ipatrol[] = array(
+            "name" => "ipatrol_dispomail",
+            "optionscode" => "onoff",
+            "value" => '1',
+        );
+
+        $ipatrol[] = array(
             "name" => "ipatrol_banproxy",
             "optionscode" => "onoff",
             "value" => '1',
@@ -275,6 +281,8 @@ if (defined('IN_ADMINCP')) {
     $plugins->add_hook('global_start', 'ipatrol_bot_trap');
     $plugins->add_hook('global_end', 'ipatrol_ban_proxy');
     $plugins->add_hook('member_do_register_start', 'ipatrol_ban_regdupe');
+    $plugins->add_hook('xmlhttp_email_availability', 'ipatrol_disposable_mailcheck');
+    $plugins->add_hook('datahandler_user_validate', 'ipatrol_disposable_mailcheck');
 
     // Hooks for auto-unapproval of post
     $plugins->add_hook('datahandler_post_validate_post', 'ipatrol_spamcheck');
@@ -672,5 +680,30 @@ if (defined('IN_ADMINCP')) {
             }
         }
         return false;
+    }
+
+    function ipatrol_disposable_mailcheck(&$user)
+    {
+        global $mybb;
+        if($mybb->settings['ipatrol_dispomail']) {
+            $ajax = (THIS_SCRIPT === "xmlhttp.php");
+            if($ajax) {
+                global $email;
+            } else if(isset($user->data['email'])) {
+                $email = $user->data['email'];
+            }
+            $email_part = explode('@', $email);
+            if(isset($email_part[1]) && ipatrol_api_call("https://open.kickbox.com/v1/disposable/".$email_part[1])['disposable']) {
+                global $lang;
+                $lang->load('ipatrol');
+                if($ajax) {
+                    global $errors;
+                    $errors[] = $lang->userdata_disposable_email;
+                } else {
+                    $user->set_error('disposable_email');
+                    return false;
+                }
+            }
+        }
     }
 }

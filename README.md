@@ -22,4 +22,5 @@
 
 ## External Dependency:
 - [IP-API](http://ip-api.com/) for geo-location detection
+- [Kickbox](https://open.kickbox.com/) for disposable email detection
 - [CrawlerDetect](https://github.com/JayBizzle/Crawler-Detect) by @JayBizzle
