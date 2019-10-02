@@ -287,7 +287,7 @@ if (defined('IN_ADMINCP')) {
     $plugins->add_hook('online_start', 'ipatrol_js_inject');
     $plugins->add_hook('global_start', 'ipatrol_bot_trap');
     $plugins->add_hook('global_end', 'ipatrol_ban_proxy');
-    $plugins->add_hook('member_do_register_start', 'ipatrol_ban_regdupe');
+    //$plugins->add_hook('member_do_register_start', 'ipatrol_ban_regdupe');
     $plugins->add_hook('xmlhttp_email_availability', 'ipatrol_disposable_mailcheck');
     $plugins->add_hook('datahandler_user_validate', 'ipatrol_disposable_mailcheck');
 
