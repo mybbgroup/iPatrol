@@ -26,7 +26,7 @@ if (defined('IN_ADMINCP')) {
             'website' => 'https://github.com/mybbgroup/iPatrol',
             'author' => 'effone</a> of <a href="https://mybb.group">MyBBGroup</a>',
             'authorsite' => 'https://eff.one',
-            'version' => '1.1.0',
+            'version' => '1.1.1',
             'compatibility' => '18*',
             'codename' => 'ipatrol',
         );
