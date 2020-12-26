@@ -493,6 +493,7 @@ if (defined('IN_ADMINCP')) {
                 $lang->load('ipatrol');
                 $response = array('error' => $lang->invalid_response);
             } else {
+                global $mybb;
                 if (!isset($prepatrol) || empty($prepatrol)) {
                     $prepatrol = array();
                 }
@@ -500,7 +501,7 @@ if (defined('IN_ADMINCP')) {
                 array_unshift($prepatrol, $response);
                 $limit = (int) $mybb->settings['ipatrol_apicachelimit'];
                 if (!$limit) {
-                    $limit = 100;
+                    $limit = 500;
                 }
 
                 if (count($prepatrol) > $limit) {
