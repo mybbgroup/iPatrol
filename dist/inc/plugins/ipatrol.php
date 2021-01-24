@@ -355,7 +355,8 @@ if (defined('IN_ADMINCP')) {
                 && empty(array_intersect($usergroups, $whitegroups))
                 && !in_array($ip, $whitelist)) {
                 $response = ipatrol_ip_info($ip, 'proxy');
-                if (!empty($response) && json_decode($response, true)['proxy']) {
+				$response2 = ipatrol_api_call('https://blackbox.ipinfo.app/lookup/'.$ip); // Crosscheck
+				if ((!empty($response) && json_decode($response, true)['proxy']) || $response2 == "Y") {
                     // Ban this IP
                     $actlog['act_done'] = 8;
                     $actlog['act_data']['ip'] = $ip;
@@ -466,14 +467,14 @@ if (defined('IN_ADMINCP')) {
             ),
         ));
 
-        $response = @file_get_contents($url, 0, $stream);
-        $response = json_decode($response, true);
-        if (!json_last_error() == 0) {
-            // Return response failed / not in expected JSON format
-            return false;
-        } else {
-            return $response;
-        }
+		$response = @file_get_contents($url, 0, $stream);
+		$result = json_decode($response, true);
+		if ($result == NULL && !empty($response)) { // Not a JSON
+			return $response;
+		} else if (json_last_error() == 0) { // Valid JSON
+			return $result;
+		}
+		return NULL;
     }
 
     function ipatrol_ip_info($ip, $fields = '')
