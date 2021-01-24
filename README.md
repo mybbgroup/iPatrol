@@ -22,6 +22,7 @@
 - Ability to see all actions performed by iPatrol right inside Moderator Control Panel.
 
 ## External Dependency:
-- [IP-API](http://ip-api.com/) for geo-location detection
+- [IP-API](http://ip-api.com/) for geo-location detection & Proxy
+- [Blackbox IPInfo](https://blackbox.ipinfo.app) for Proxy (Crosscheck)
 - [Kickbox](https://open.kickbox.com/) for disposable email detection
 - [CrawlerDetect](https://github.com/JayBizzle/Crawler-Detect) by @JayBizzle
