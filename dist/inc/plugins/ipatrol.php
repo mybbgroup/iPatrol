@@ -705,18 +705,20 @@ if (defined('IN_ADMINCP')) {
             } else if(isset($user->data['email'])) {
                 $email = $user->data['email'];
             }
-            $email_part = explode('@', $email);
-            if(isset($email_part[1]) && ipatrol_api_call("https://open.kickbox.com/v1/disposable/".$email_part[1])['disposable']) {
-                global $lang;
-                $lang->load('ipatrol');
-                if($ajax) {
-                    global $errors;
-                    $errors[] = $lang->userdata_disposable_email;
-                } else {
-                    $user->set_error('disposable_email');
-                    return false;
-                }
-            }
+			if(isset($email)) { // May not be set. Case: ModCP Profile edit
+				$email_part = explode('@', $email);
+				if (isset($email_part[1]) && ipatrol_api_call("https://open.kickbox.com/v1/disposable/" . $email_part[1])['disposable']) {
+					global $lang;
+					$lang->load('ipatrol');
+					if ($ajax) {
+						global $errors;
+						$errors[] = $lang->userdata_disposable_email;
+					} else {
+						$user->set_error('disposable_email');
+						return false;
+					}
+				}
+			}
         }
     }
 }
