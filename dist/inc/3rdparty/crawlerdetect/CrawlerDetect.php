@@ -165,7 +165,7 @@ class CrawlerDetect
         $agent = trim(preg_replace(
             "/{$this->compiledExclusions}/i",
             '',
-            $userAgent ?: $this->userAgent
+            $userAgent ?: $this->userAgent ?: ''
         ));
 
         if ($agent === '') {
@@ -183,5 +183,14 @@ class CrawlerDetect
     public function getMatches()
     {
         return isset($this->matches[0]) ? $this->matches[0] : null;
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function getUserAgent()
+    {
+        return $this->userAgent;
     }
 }
